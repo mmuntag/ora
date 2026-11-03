@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="hu"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Óra · Kimutatás</title>
+<style>
+*{box-sizing:border-box}body{font:15px system-ui,sans-serif;background:#f3f5fa;color:#19243a;margin:0;padding:32px;max-width:1400px;margin:auto}h1{font-size:32px;margin-bottom:6px}p{color:#56617a}header{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}select,button{font:inherit;padding:9px;border:1px solid #c6cddd;border-radius:8px;background:white}section{background:white;border:1px solid #dce1eb;border-radius:16px;padding:24px;margin:24px 0}.scroll{overflow-x:auto;overscroll-behavior-x:contain}.plot{display:flex;height:290px;align-items:stretch;min-width:100%}.column{flex:0 0 calc(100% / 7);min-width:110px;padding:0 8px;display:flex;flex-direction:column;justify-content:end;text-align:center}.bararea{height:230px;display:flex;align-items:end;justify-content:center;border-bottom:1px solid #cbd2e0}.bar{width:66%;min-width:25px;display:flex;flex-direction:column-reverse}.segment{min-height:1px}.total{font-size:12px;color:#526079;margin:6px}.label{font-size:12px;margin-top:10px;white-space:nowrap}.legend{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0 0}.key{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px}table{border-collapse:collapse;width:100%;margin-top:16px}td,th{text-align:left;border-bottom:1px solid #e3e7ef;padding:9px;overflow-wrap:anywhere}td:last-child,th:last-child{text-align:right}details{margin-top:15px}#status{padding:12px 0}a{color:#355ec1}@media(max-width:650px){body{padding:14px}section{padding:14px}.column{min-width:105px}}
+</style>
+<header><div><h1>Óra · Kimutatás</h1><p>A ráfordított idő, áttekinthetően.</p></div><label>Csoportosítás <select id="group"><option value="tag">Tag</option><option value="name">Tag: leírás</option></select></label></header>
+<p id="status"></p><main id="charts"></main>
+<script>
+const entries=/*DATA*/[];
+const colors=['#4568dc','#23a98c','#e9a23b','#db657c','#8b68d9','#3aa3c3','#a08b52','#739e3d','#ba6e38','#65778e'];
+const duration=s=>{s=Math.round(s);return `${Math.floor(s/3600)} ó ${Math.floor(s%3600/60)} p ${s%60} mp`};
+const localDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+function period(date,kind){let d=new Date(date+'T00:00:00');if(kind==='week')d.setDate(d.getDate()-(d.getDay()+6)%7);if(kind==='month')d.setDate(1);return localDate(d)}
+function advance(key,kind){const d=new Date(key+'T00:00:00');if(kind==='month')d.setMonth(d.getMonth()+1);else d.setDate(d.getDate()+(kind==='week'?7:1));return localDate(d)}
+function el(tag,text,cls){const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e}
+function render(){
+ const mode=document.querySelector('#group').value,now=new Date(),daily=[];
+ // Split open sessions at local midnight so a live entry spanning days is attributed correctly.
+ for(const e of entries){let start=new Date(e.start),end=e.end?new Date(e.end):now;if(end<start)continue;while(start<end){let boundary=new Date(start);boundary.setHours(24,0,0,0);let until=new Date(Math.min(+boundary,+end));daily.push({date:localDate(start),name:mode==='tag'?e.name.split(':')[0].trim():e.name,seconds:(until-start)/1000});start=until}}
+ const names=[...new Set(daily.map(e=>e.name))].sort(),color=new Map(names.map((n,i)=>[n,colors[i%colors.length]]));
+ const main=document.querySelector('#charts');main.replaceChildren();
+ document.querySelector('#status').textContent=`Kimutatás frissítve: ${now.toLocaleString('hu-HU')}. ${entries.some(e=>!e.end)?'Folyamatban lévő mérés is szerepel benne.':''} Korábbi időszakok: görgess balra a diagramon. A kézzel módosított CSV-t az alkalmazás következő állapotváltása vagy a Frissítés parancs tölti be.`;
+ for(const [kind,title] of [['day','Napi'],['week','Heti · hétfőtől'],['month','Havi']]){
+  const section=el('section'),heading=el('h2',title);section.append(heading);
+  const grouped=new Map();for(const e of daily){const key=period(e.date,kind);if(!grouped.has(key))grouped.set(key,new Map());const row=grouped.get(key);row.set(e.name,(row.get(e.name)||0)+e.seconds)}
+  let last=period(localDate(now),kind),first=[...grouped.keys(),last].sort()[0];for(let i=0,d=new Date(last+'T00:00:00');i<6;i++){if(kind==='month')d.setMonth(d.getMonth()-1);else d.setDate(d.getDate()-(kind==='week'?7:1));first=[first,localDate(d)].sort()[0]}
+  if(grouped.size)last=[...grouped.keys(),last].sort().at(-1);
+  const keys=[];for(let key=first;key<=last;key=advance(key,kind))keys.push(key);
+  const sums=keys.map(k=>[...(grouped.get(k)||new Map()).values()].reduce((a,b)=>a+b,0)),max=Math.max(1,...sums);
+  const scroll=el('div',undefined,'scroll'),plot=el('div',undefined,'plot');scroll.tabIndex=0;scroll.setAttribute('aria-label',title+' diagram, vízszintesen görgethető');
+  keys.forEach((k,i)=>{const col=el('div',undefined,'column'),area=el('div',undefined,'bararea'),bar=el('div',undefined,'bar');bar.style.height=`${sums[i]/max*100}%`;for(const [name,seconds] of grouped.get(k)||[]){const seg=el('div',undefined,'segment');seg.style.height=`${seconds/sums[i]*100}%`;seg.style.background=color.get(name);seg.title=`${name}: ${duration(seconds)}`;bar.append(seg)}area.append(bar);col.append(el('div',duration(sums[i]),'total'),area,el('div',kind==='month'?k.slice(0,7):k,'label'));plot.append(col)});
+  scroll.append(plot);section.append(scroll);const legend=el('div',undefined,'legend');for(const n of names){const item=el('span'),swatch=el('span',undefined,'key');swatch.style.background=color.get(n);item.append(swatch,document.createTextNode(n));legend.append(item)}section.append(legend);
+  const details=el('details'),table=el('table'),head=el('tr');for(const text of ['Időszak','Megnevezés','Időtartam'])head.append(el('th',text));table.append(head);details.append(el('summary','Pontos értékek táblázatban'));
+  for(const k of [...keys].reverse())for(const [name,seconds]of grouped.get(k)||[]){const tr=el('tr');tr.append(el('td',k),el('td',name),el('td',duration(seconds)));table.append(tr)}details.append(table);section.append(details);main.append(section);requestAnimationFrame(()=>scroll.scrollLeft=scroll.scrollWidth);
+ }
+}
+document.querySelector('#group').addEventListener('change',render);render();
+// Live totals update while this standalone file is open; completed sessions arrive on reload.
+setInterval(()=>{if(entries.some(e=>!e.end))render()},60000);
+</script></html>

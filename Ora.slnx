@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Ora.Core/Ora.Core.csproj" />
+    <Project Path="src/Ora/Ora.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Ora.Core.Tests/Ora.Core.Tests.csproj" />
+  </Folder>
+</Solution>

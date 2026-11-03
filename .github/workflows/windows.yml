@@ -1,0 +1,21 @@
+name: Windows build
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build, test and package
+        shell: pwsh
+        run: ./build.ps1 -Installer
+      - name: Check standalone HTML report
+        run: node tests/report.test.cjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Ora-Windows-x64
+          path: |
+            artifacts/publish/Ora.exe
+            artifacts/installer/Ora-Setup.exe
