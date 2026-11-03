@@ -28,13 +28,13 @@ Kimenet: `artifacts/publish/Ora.exe`, illetve `artifacts/installer/Ora-Setup.exe
 
 ## Használat
 
-Induláskor válassz egy gyakori tevékenységet, vagy írj be egy megnevezést, például `Munka: Tervezés`. A kettőspont nélküli nevek is megengedettek. A tíz bilétát a fájlban található megnevezések gyakorisága határozza meg, egyezésnél a frissebb az első. Indításkor az ablak eltűnik. Új tevékenység indítása lezárja az előzőt.
+Induláskor válassz egy gyakori tevékenységet, vagy írj be egy megnevezést, például `Munka: Tervezés`. A kettőspont nélküli nevek is megengedettek. A tíz bilétát a fájlban található megnevezések gyakorisága határozza meg, egyezésnél a frissebb az első. Indításkor az ablak eltűnik. Új tevékenység indítása lezárja az előzőt. Az aktuális tevékenység neve és az eltelt idő az ablak tetején kiemelve látható. A vezérlés a ▶ (indítás/folytatás), ⏸ (szünet) és ■ (leállítás) gombokkal történik; a gombok fölé mutatva megjelenik a funkció neve. A Kimutatás és az Adatmappa kisebb gombként az ablak alján érhető el.
 
-A tálcaikon bal vagy jobb kattintására megjelenik a menü: ablak/új tevékenység, leállítás, szünet, folytatás, kimutatás, adatmappa, fájlok frissítése, kilépés. Dupla kattintásra megjelenik az ablak. Az ablak X gombja visszarejti az alkalmazást a tálcára. Kilépni a tálcamenüből lehet. A szünet lezárja az aktuális időszakot, a folytatás ugyanazzal a névvel új időszakot indít; a szünet ideje nem számít bele.
+A tálcaikon bal vagy jobb kattintására megjelenik a menü: ablak/új tevékenység, leállítás, szünet, folytatás, fájlok frissítése, kilépés. Dupla kattintásra megjelenik az ablak. Az ablak X gombja visszarejti az alkalmazást a tálcára. Kilépni a tálcamenüből lehet. A szünet lezárja az aktuális időszakot, a folytatás ugyanazzal a névvel új időszakot indít; a szünet ideje nem számít bele.
 
 ## Adatok és kézi szerkesztés
 
-Az adatok helye: **`%USERPROFILE%\Ora`**, például `C:\Users\Anna\Ora`. Az Adatmappa gomb megnyitja ezt.
+Az adatok helye: **`%USERPROFILE%\Ora`**, például `C:\Users\Anna\Ora`. Az ablak alján lévő Adatmappa gomb megnyitja ezt.
 
 - `idomeres.csv`: UTF-8 szöveg, az első sor fejléc.
 - `idomeres.csv.bak`: a legutóbbi átírás előtti fájl.
@@ -58,7 +58,7 @@ Az éjfélen átívelő mérések naponként külön sort kapnak. A teljes nap v
 
 ## Kimutatás és helyreállítás
 
-A HTML napi, hétfővel kezdődő heti és havi halmozott oszlopdiagramot tartalmaz. Felül váltható a tag és a teljes megnevezés szerinti csoportosítás. Kezdetben a legutóbbi hét időszak látszik; a diagramok vízszintesen görgethetők a korábbiakhoz. A pontos értékek lenyitható táblázatokban is elérhetők, az üres időszakok is szerepelnek. A fájl minden állapotváltáskor újragenerálódik; egy már megnyitott böngészőlapon frissíts az új befejezett mérések betöltéséhez. A benne lévő nyitott mérés időtartama percenként frissül.
+A HTML egy halmozott oszlopdiagramot tartalmaz. Felül a csoportosítás mellett váltható a napi, hétfővel kezdődő heti és havi nézet, valamint a tag és a teljes megnevezés szerinti csoportosítás. Kezdetben a legutóbbi hét időszak látszik; a diagram vízszintesen görgethető a korábbiakhoz. A pontos értékek lenyitható táblázatban is elérhetők, az üres időszakok is szerepelnek. A fájl minden állapotváltáskor újragenerálódik; egy már megnyitott böngészőlapon frissíts az új befejezett mérések betöltéséhez. A benne lévő nyitott mérés időtartama percenként frissül.
 
 Normál kilépéskor, Windows-kijelentkezéskor és leállításkor az alkalmazás lezárja a futó mérést. Áramkimaradás vagy Feladatkezelőből végrehajtott kényszerleállítás esetén egy folyamat nem tud utólag menteni. Következő indításkor ezért helyreállítási kérdés jelenik meg: lezárás az utolsó mentett életjelnél, vagy a jelenlegi idővel. Életjel nélküli kézzel megadott nyitott sornál az első választás nulla hosszúságú mérést jelent; a CSV-ben javítható. A szünetben megjegyzett név csak az aktuális programfutás alatt marad meg.
 
@@ -74,3 +74,5 @@ node tests/report.test.cjs
 Windowsos kézi ellenőrzéshez: első indítás üres mappával; indítás/rejtés; tálcáról taskváltás; szünet/folytatás; leállítás és kilépés; CSV módosítása futó mérés közben; zárolt CSV és HTML feloldása; éjfélen átnyúló minta betöltése; helyreállítás kényszerleállítás után; telepítő, automatikus indítás és eltávolítás. A natív ablak, tálca és Windows-leállítás viselkedését Windows alatt kell ellenőrizni.
 
 A csomagolás a Microsoft [önálló, egyfájlos .NET-kiadásának](https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview) megfelelően történik; a leállítás kezelése a Windows [SessionEnding eseményét](https://learn.microsoft.com/en-us/dotnet/api/microsoft.win32.systemevents.sessionending) is figyeli.
+
+A saját programikon szerkeszthető forrása: `src/Ora/Assets/ora.svg`; a többméretű Windows-ikon: `ora.ico` ugyanitt. Az exe, az ablak, a tálcaikon és a telepítő ezt használja; a Start menüs parancsikon az exe ikonját veszi át.

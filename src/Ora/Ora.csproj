@@ -7,6 +7,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets/ora.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup><ProjectReference Include="../Ora.Core/Ora.Core.csproj" /></ItemGroup>
+  <ItemGroup><EmbeddedResource Include="Assets/ora.ico" LogicalName="Ora.AppIcon.ico" /></ItemGroup>
 </Project>

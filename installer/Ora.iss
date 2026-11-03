@@ -19,6 +19,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 CloseApplications=yes
 UninstallDisplayIcon={app}\Ora.exe
+SetupIconFile=..\src\Ora\Assets\ora.ico
 
 [Languages]
 Name: "hungarian"; MessagesFile: "compiler:Languages\Hungarian.isl"
