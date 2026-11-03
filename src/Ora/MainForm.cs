@@ -13,8 +13,8 @@ public sealed class MainForm : Form
     private readonly Label taskName = new() { AutoSize = true, Dock = DockStyle.Top, Margin = new Padding(0, 8, 0, 8), ForeColor = Color.FromArgb(20, 48, 70) };
     private readonly Label elapsed = new() { AutoSize = true, ForeColor = Color.FromArgb(28, 112, 115) };
     private readonly FlowLayoutPanel frequent = new() { Dock = DockStyle.Fill, AutoScroll = true };
-    private readonly MediaButton stop = new(MediaAction.Stop) { Enabled = false };
-    private readonly MediaButton pause = new(MediaAction.Pause) { Enabled = false };
+    private readonly MediaButton stop = new(MediaAction.Stop);
+    private readonly MediaButton playPause = new(MediaAction.Play);
     private readonly ToolTip tips = new();
     private readonly ToolStripMenuItem trayStop = new("Leállítás"), trayPause = new("Szünet"), trayResume = new("Folytatás");
     private readonly System.Windows.Forms.Timer timer = new() { Interval = 1000 };
@@ -51,10 +51,9 @@ public sealed class MainForm : Form
         layout.Controls.Add(new Label { Text = "Mivel foglalkozol most?", AutoSize = true, Font = new Font(Font, FontStyle.Bold) });
         var input = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, ColumnCount = 1 };
         input.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        var start = new MediaButton(MediaAction.Play);
-        start.AccessibleName = "Indítás";
+        playPause.AccessibleName = "Indítás";
         stop.AccessibleName = "Leállítás";
-        tips.SetToolTip(start, "Indítás (Enter)");
+        tips.SetToolTip(playPause, "Indítás (Enter)");
         tips.SetToolTip(stop, "Leállítás");
         input.Controls.Add(name);
         layout.Controls.Add(input);
@@ -62,7 +61,7 @@ public sealed class MainForm : Form
         var report = new Button { Text = "Kimutatás", AutoSize = true, Font = new Font(Font.FontFamily, 9), FlatStyle = FlatStyle.Flat, ForeColor = SystemColors.GrayText };
         var folder = new Button { Text = "Adatmappa", AutoSize = true, Font = report.Font, FlatStyle = FlatStyle.Flat, ForeColor = SystemColors.GrayText };
         report.FlatAppearance.BorderSize = folder.FlatAppearance.BorderSize = 0;
-        actions.Controls.AddRange([start, pause, stop]);
+        actions.Controls.AddRange([playPause, stop]);
         layout.Controls.Add(actions);
         layout.Controls.Add(new Label { Text = "A 10 leggyakoribb tevékenység", AutoSize = true, Padding = new Padding(0, 8, 0, 8) });
         layout.Controls.Add(frequent);
@@ -70,19 +69,17 @@ public sealed class MainForm : Form
         footer.Controls.AddRange([report, folder]);
         layout.Controls.Add(footer);
         Controls.Add(layout);
-        AcceptButton = start;
+        AcceptButton = playPause;
         var menu = new ContextMenuStrip();
         menu.Items.Add("Ablak / új tevékenység", null, (_, _) => Reveal());
         menu.Items.Add(trayStop); menu.Items.Add(trayPause); menu.Items.Add(trayResume);
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Frissítés a fájlból", null, (_, _) => RunIO(() => { var rows = store.Read(); store.Write(rows); RefreshTags(rows); }));
         menu.Items.Add("Kilépés", null, (_, _) => Exit());
         tray = new NotifyIcon { Icon = Icon, Text = "Óra · nincs aktív mérés", ContextMenuStrip = menu, Visible = true };
         tray.DoubleClick += (_, _) => Reveal();
         tray.MouseClick += (_, e) => { if (e.Button == MouseButtons.Left) menu.Show(Cursor.Position); };
-        start.Click += (_, _) => StartTask(name.Text);
+        playPause.Click += (_, _) => { if (active is not null) StopTask(true); else StartTask(name.Text); };
         stop.Click += (_, _) => StopTask(false);
-        pause.Click += (_, _) => { if (active is not null) StopTask(true); else if (pausedName is not null) StartTask(pausedName); };
         trayStop.Click += (_, _) => StopTask(false);
         trayPause.Click += (_, _) => StopTask(true);
         trayResume.Click += (_, _) => { if (pausedName is not null) StartTask(pausedName); };
@@ -135,7 +132,15 @@ public sealed class MainForm : Form
 
     private void StopTask(bool pausing)
     {
-        if (active is null) return;
+        if (busy) return;
+        if (active is null)
+        {
+            if (pausing) return;
+            pausedName = null;
+            name.Clear();
+            UpdateState();
+            return;
+        }
         RunIO(() =>
         {
             var at = Now;
@@ -144,6 +149,7 @@ public sealed class MainForm : Form
             Finish(rows, at);
             Persist(rows, null, at);
             active = null; pausedName = pausing ? previous : null;
+            if (!pausing) name.Clear();
             RefreshTags(rows); UpdateState(); Reveal();
         });
     }
@@ -184,11 +190,11 @@ public sealed class MainForm : Form
     private void UpdateState()
     {
         bool running = active is not null;
-        stop.Enabled = trayStop.Enabled = trayPause.Enabled = running;
-        pause.Enabled = running || pausedName is not null;
-        pause.Action = running ? MediaAction.Pause : MediaAction.Play;
-        pause.AccessibleName = running ? "Szünet" : "Folytatás";
-        tips.SetToolTip(pause, pause.AccessibleName);
+        trayStop.Enabled = true;
+        trayPause.Enabled = running;
+        playPause.Action = running ? MediaAction.Pause : MediaAction.Play;
+        playPause.AccessibleName = running ? "Szünet" : pausedName is not null ? "Folytatás" : "Indítás";
+        tips.SetToolTip(playPause, playPause.AccessibleName + " (Enter)");
         trayResume.Enabled = !running && pausedName is not null;
         Tick();
     }
