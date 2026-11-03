@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Drawing.Drawing2D;
 
 namespace Ora;
@@ -7,6 +8,7 @@ internal enum MediaAction { Play, Pause, Stop }
 internal sealed class MediaButton : Button
 {
     private MediaAction action;
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public MediaAction Action
     {
         get => action;
